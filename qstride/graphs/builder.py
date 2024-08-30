@@ -21,6 +21,12 @@ class GraphBuilderBase:
         If True, initializes a directed graph.
         If False (default), initializes an undirected graph.
 
+    name: str, optional
+        The name of the graph.
+
+    metadata: Dict[str, Any], optional
+        A dictionary of metadata to associate with the graph.
+
     Attributes
     ----------
     graph: networkx.Graph or networkx.DiGraph
@@ -33,35 +39,25 @@ class GraphBuilderBase:
     }
 
     def __init__(self,
-                 directed: bool = False):
+                 directed: bool = False,
+                 name: Optional[str] = None,
+                 metadata: Optional[Dict[str, Any]] = None):
         self.directed = directed
         self.graph = None
-        self.logger = None
 
         # Initialize the appropriate graph by type
         self._initialize_graph()
 
-    def _initialize_graph(self) -> None:
-        """
-        Initialize the graph based on the specified type (directed or undirected).
-        """
-        graph_type = "directed" if self.directed else "undirected"
-        self.graph = self.graph_types[graph_type]
+        # Set the graph name and metadata if provided
+        if name is not None:
+            self.name = name
+        if metadata is not None:
+            self.metadata = metadata
 
-    def set_graph_name(self, name: str) -> None:
+    @property
+    def name(self) -> str:
         """
-        Set a name for the graph.
-
-        Parameters
-        ----------
-        name: str
-            The name to assign to the graph.
-        """
-        self.graph.graph['name'] = name
-
-    def get_graph_name(self) -> str:
-        """
-        Retrieve the name of the graph.
+        Property to get or set the name of the graph.
 
         Returns
         -------
@@ -70,20 +66,22 @@ class GraphBuilderBase:
         """
         return self.graph.graph.get('name', '')
 
-    def set_graph_metadata(self, metadata: Dict[str, Any]) -> None:
+    @name.setter
+    def name(self, value: str) -> None:
         """
-        Set metadata for the graph, such as description, creation date, or author.
+        Setter for the name property.
 
         Parameters
         ----------
-        metadata: Dict[str, Any]
-            A dictionary containing metadata to associate with the graph.
+        value: str
+            The name to assign to the graph.
         """
-        self.graph.graph.update(metadata)
+        self.graph.graph['name'] = value
 
-    def get_graph_metadata(self) -> Dict[str, Any]:
+    @property
+    def metadata(self) -> Dict[str, Any]:
         """
-        Retrieve the metadata associated with the graph.
+        Property to get or set metadata for the graph.
 
         Returns
         -------
@@ -91,6 +89,25 @@ class GraphBuilderBase:
             A dictionary containing the metadata of the graph.
         """
         return {key: value for key, value in self.graph.graph.items() if key != 'name'}
+
+    @metadata.setter
+    def metadata(self, value: Dict[str, Any]) -> None:
+        """
+        Setter for the metadata property.
+
+        Parameters
+        ----------
+        value: Dict[str, Any]
+            A dictionary containing metadata to associate with the graph.
+        """
+        self.graph.graph.update(value)
+
+    def _initialize_graph(self) -> None:
+        """
+        Initialize the graph based on the specified type (directed or undirected).
+        """
+        graph_type = "directed" if self.directed else "undirected"
+        self.graph = self.graph_types[graph_type]
 
     def _convert_to_directed(self) -> None:
         """
@@ -884,34 +901,78 @@ class GraphBuilder(GraphBuilderBase):
         return nx.average_clustering(self.graph)
 
 
-
-class LinearGraphBuilder(GraphBuilder):
+class WeightedGraphBuilder(GraphBuilder):
     """
-    A class to create linear (path) graphs.
+    A class to create and manipulate generic weighted graphs.
+
+    Parameters
+    ----------
+    edges: List[Tuple[int, int]]
+        A list of edges where each edge is represented by a tuple of two node identifiers.
+    directed: bool, optional
+        If True, creates a directed graph. If False (default), creates an undirected graph.
+    weights: Optional[List[Union[int, float]]], optional
+        A list of weights corresponding to the edges. If None (default), the edges are unweighted.
     """
 
     def __init__(self,
-                 num_nodes,
-                 directed=False,
-                 weights=None):
+                 edges: List[Tuple[int, int]],
+                 directed: bool = False,
+                 weights: Optional[List[Union[int, float]]] = None):
+        super().__init__(directed=directed)
+        self.edges = edges
+        self.weights = weights
+        self._create_weighted_graph()
+
+    def _create_weighted_graph(self) -> None:
         """
-        Initialize a linear graph with a specified number of nodes.
+        Create a weighted graph with the specified edges and weights.
+        """
+        self.add_edges(self.edges, self.weights)
+
+    def add_edge_with_weight(self,
+                             node1: int,
+                             node2: int,
+                             weight: Optional[Union[int, float]] = None) -> None:
+        """
+        Add an edge with a specific weight to the graph.
 
         Parameters
         ----------
-        num_nodes: int
-            The number of nodes in the linear graph.
-        directed: bool, optional
-            If True, creates a directed linear graph. If False (default), creates an undirected linear graph.
-        weights: list of numerics, optional
-            A list of weights for the edges (default is None, which means unweighted).
+        node1: int
+            The first node identifier.
+        node2: int
+            The second node identifier.
+        weight: Optional[Union[int, float]], optional
+            The weight of the edge. If None, the edge is unweighted.
         """
+        self.add_edge(node1, node2, weight)
+
+
+class LinearGraphBuilder(GraphBuilder):
+    """
+    A class to create and manipulate linear (path) graphs.
+
+    Parameters
+    ----------
+    num_nodes: int
+        The number of nodes in the linear graph.
+    directed: bool, optional
+        If True, creates a directed linear graph. If False (default), creates an undirected linear graph.
+    weights: Optional[List[Union[int, float]]], optional
+        A list of weights for the edges. If None (default), the edges are unweighted.
+    """
+
+    def __init__(self,
+                 num_nodes: int,
+                 directed: bool = False,
+                 weights: Optional[List[Union[int, float]]] = None):
         super().__init__(directed=directed)
         self.num_nodes = num_nodes
         self.weights = weights
         self._create_linear_graph()
 
-    def _create_linear_graph(self):
+    def _create_linear_graph(self) -> None:
         """
         Create a linear graph (path graph) with the specified number of nodes.
         """
@@ -919,50 +980,50 @@ class LinearGraphBuilder(GraphBuilder):
         self.add_edges(edges, self.weights)
 
     def add_node_to_end(self,
-                        weight=None):
+                        weight: Optional[Union[int, float]] = None) -> None:
         """
         Add a node to the end of the linear graph.
 
         Parameters
         ----------
-        weight: numeric, optional
-            The weight of the edge connecting the new node (default is None).
+        weight: Optional[Union[int, float]], optional
+            The weight of the edge connecting the new node to the last node. If None, the edge is unweighted.
         """
+        new_node = self.num_nodes + 1
+        self.add_edge(self.num_nodes, new_node, weight)
         self.num_nodes += 1
-        self.add_edge(self.num_nodes - 1, self.num_nodes, weight)
 
 
 class CyclicGraphBuilder(GraphBuilder):
     """
-    A class to create cyclic graphs.
+    A class to create and manipulate cyclic graphs.
+
+    Parameters
+    ----------
+    num_nodes: int
+        The number of nodes in the cyclic graph.
+    directed: bool, optional
+        If True, creates a directed cyclic graph. If False (default), creates an undirected cyclic graph.
+    weights: Optional[List[Union[int, float]]], optional
+        A list of weights for the edges. If None (default), the edges are unweighted.
     """
 
-    def __init__(self, num_nodes, directed=False, weights=None):
-        """
-        Initialize a cyclic graph with a specified number of nodes.
-
-        Parameters
-        ----------
-        num_nodes: int
-            The number of nodes in the cyclic graph.
-        directed: bool, optional
-            If True, creates a directed cyclic graph. If False (default), creates an undirected cyclic graph.
-        weights: list of numerics, optional
-            A list of weights for the edges (default is None, which means unweighted).
-        """
+    def __init__(self,
+                 num_nodes: int,
+                 directed: bool = False,
+                 weights: Optional[List[Union[int, float]]] = None):
         super().__init__(directed=directed)
         self.num_nodes = num_nodes
         self.weights = weights
         self._create_cyclic_graph()
 
-    def _create_cyclic_graph(self):
+    def _create_cyclic_graph(self) -> None:
         """
         Create a cyclic graph with the specified number of nodes.
         """
         edges = [(i, i + 1) for i in range(1, self.num_nodes)]
         edges.append((self.num_nodes, 1))  # Close the cycle
         self.add_edges(edges, self.weights)
-
 
 
 # Example usage
