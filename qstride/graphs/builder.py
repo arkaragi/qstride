@@ -1,39 +1,44 @@
 """
 This module provides a comprehensive framework for creating, manipulating,
-analyzing, and visualizing graphs using the networkx library.
+analyzing, and visualizing graphs using the NetworkX library.
 
-Classes
--------
+It is designed to be modular, with a base class for fundamental graph operations
+and extended classes that provide additional utilities and functionalities, such
+as graph analysis, file I/O, and visualization.
+
+Key Features:
+-------------
+- Graph Initialization:
+    Create directed or undirected graphs with ease.
+- Node and Edge Management:
+    Add, remove, and update nodes and edges with full control over their attributes.
+- Graph Analysis:
+    Compute key metrics like clustering coefficients, graph density, and connectivity.
+- File I/O:
+    Load and save graphs in various formats, including GML, GraphML, and JSON.
+- Visualization:
+    Visualize graphs with customizable layouts and styles using Matplotlib.
+
+Class Overview:
+---------------
 - GraphBuilderBase:
-    The foundational class that provides basic functionality for graph
-    initialization, logging, and common attribute management.
-
+    The foundational class for initializing and managing graph attributes.
 - GraphBuilderUtils:
-   An extension of the base class, offering utility methods for common
-   graph operations and analysis such as checking graph connectivity and
-   calculating shortest paths, and clustering coefficients.
-
+    Extends the base class with utility methods for graph analysis and manipulation.
 - GraphBuilder:
-    The top-level class that builds upon the utility methods to include
-    additional functionality for file I/O and visualization.
-
-Usage:
-------
-- Initialize a graph (directed or undirected) using the GraphBuilder class.
-- Perform graph operations such as adding nodes/edges, updating attributes,
-  and calculating metrics.
-- Load and save graphs in different formats (GML, GraphML, JSON).
-- Visualize the graph structure using the integrated `matplotlib` support.
+    The top-level class that incorporates file I/O and visualization capabilities,
+    providing a complete framework for graph operations.
 
 Example:
 --------
+# Import the GraphBuilder class
 >>> from qstride.qstride.graphs.builder import GraphBuilder
-
 # Create an undirected graph
 >>> builder = GraphBuilder(directed=False)
+# Add three nodes to the graph
 >>> builder.add_nodes([1, 2, 3])
+# Add edges between the specified nodes
 >>> builder.add_edges([(1, 2), (2, 3)])
->>> # builder.visualize_graph()  # visualize the graph
 """
 
 import logging
