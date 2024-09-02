@@ -31,14 +31,10 @@ Class Overview:
 
 Example:
 --------
-# Import the GraphBuilder class
 >>> from qstride.qstride.graphs.builder import GraphBuilder
-# Create an undirected graph
->>> builder = GraphBuilder(directed=False)
-# Add three nodes to the graph
->>> builder.add_nodes([1, 2, 3])
-# Add edges between the specified nodes
->>> builder.add_edges([(1, 2), (2, 3)])
+>>> builder = GraphBuilder(directed=False)  # Create an undirected graph
+>>> builder.add_nodes([1, 2, 3])  # Add three nodes to the graph
+>>> builder.add_edges([(1, 2), (2, 3)])  # Add edges between the specified nodes
 """
 
 import logging
