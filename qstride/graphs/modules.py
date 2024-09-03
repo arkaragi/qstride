@@ -417,21 +417,24 @@ class GridGraphBuilder(GraphBuilder):
 
 class LinearGraphBuilder(GraphBuilder):
     """
-    A class to create, manipulate, and visualize linear (path) graphs using the
-    networkx library.
+    A specialized class for creating, manipulating, and visualizing linear (path)
+    graphs using the NetworkX library.
 
-    A linear graph, or path graph, is a graph in which nodes are arranged in a
-    straight line, with each node connected to the next. This class supports
-    both directed and undirected linear graphs.
+    A linear graph, also known as a path graph, is a simple structure where each
+    node is connected in a straight line to the next, forming a single path from
+    the first node to the last. Linear graphs are useful in scenarios where you
+    need to model sequences, processes, or simple connections between consecutive
+    elements. This class allows for the creation of both weighted and unweighted
+    linear graphs, and supports both directed and undirected versions.
 
     Parameters
     ----------
     num_nodes: int
         The number of nodes in the linear graph.
 
-    directed: bool, optional, default=False
-        If True, creates a directed linear graph. If False (default), creates
-        an undirected linear graph.
+    directed: bool, default=False
+        If True, initializes a directed linear graph.
+        If False (default), initializes an undirected linear graph.
 
     name: str, default=None
         The name of the graph.
@@ -439,8 +442,17 @@ class LinearGraphBuilder(GraphBuilder):
     metadata: Dict[str, Any], default=None
         A dictionary of metadata to associate with the graph.
 
-    weights: Optional[List[Union[int, float]]], optional
-        A list of weights for the edges. If None (default), the edges are unweighted.
+    weights: Optional[List[Union[int, float]]], default=None
+        A list of weights for the edges.
+        If None (default), the edges are unweighted.
+
+    Methods
+    -------
+    add_node_to_end(weight: Optional[Union[int, float]] = None) -> None:
+        Adds a new node to the end of the linear graph, optionally with a weighted edge.
+
+    get_path() -> List[int]:
+        Returns the list of nodes in the path from the first to the last node in the graph.
     """
 
     def __init__(self,
@@ -456,15 +468,20 @@ class LinearGraphBuilder(GraphBuilder):
 
     def _create_linear_graph(self) -> None:
         """
-        Create a linear graph (path graph) with the specified number of nodes.
+        Initializes the linear graph (path graph) by connecting nodes in a straight
+        line from the first to the last. If weights are provided, they are assigned
+        to the edges.
 
-        This method initializes the linear graph by connecting nodes in a
-        straight line. If weights are provided, they are assigned to the edges.
+        Raises
+        ------
+        ValueError
+            If the number of nodes is less than 2, as a linear graph requires at least
+            two nodes.
         """
         if self.num_nodes < 2:
             raise ValueError("A linear graph requires at least 2 nodes.")
 
-        # Create the linear path
+        # Create the linear path by connecting each node to the next
         edges = [(i, i + 1) for i in range(1, self.num_nodes)]
 
         # Add the edges to the graph, with weights if provided
@@ -478,12 +495,13 @@ class LinearGraphBuilder(GraphBuilder):
     def add_node_to_end(self,
                         weight: Optional[Union[int, float]] = None) -> None:
         """
-        Add a node to the end of the linear graph.
+        Add a new node to the end of the linear graph, extending the path by one node.
 
         Parameters
         ----------
         weight: Optional[Union[int, float]], optional
-            The weight of the edge connecting the new node to the last node. If None, the edge is unweighted.
+            The weight of the edge connecting the new node to the last node in the graph.
+            If None, the edge is added without a weight.
         """
         new_node = self.num_nodes + 1
         self.add_edge(self.num_nodes, new_node, weight)
@@ -491,12 +509,13 @@ class LinearGraphBuilder(GraphBuilder):
 
     def get_path(self) -> List[int]:
         """
-        Get the path in the graph as a list of node identifiers.
+        Retrieve the sequence of nodes representing the path from the first to the last
+        node in the graph.
 
         Returns
         -------
         List[int]
-            A list of node identifiers representing the linear path.
+            A list of node identifiers representing the linear path in the graph.
         """
         return list(nx.shortest_path(self.graph, source=1, target=self.num_nodes))
 
